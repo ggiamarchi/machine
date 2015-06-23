@@ -1401,34 +1401,37 @@ Options:
  - `--openstack-floatingip-pool`: The IP pool that will be used to get a public IP can assign it to the machine. If there is an
    IP address already allocated but not assigned to any machine, this IP will be chosen and assigned to the machine. If
    there is no IP address already allocated a new IP will be allocated and assigned to the machine.
+ - `--openstack-floatingip-always-new` Force to allocate a new floating IP even if a free IP is available.
+   Without this flag docker-machine will use an existing IP if one exists.
  - `--openstack-ssh-user`: The username to use for SSH into the machine. If not provided `root` will be used.
  - `--openstack-ssh-port`: Customize the SSH port if the SSH server on the machine does not listen on the default port.
 
 Environment variables and default values:
 
-| CLI option                       | Environment variable   | Default |
-|----------------------------------|------------------------|---------|
-| `--openstack-auth-url`           | `OS_AUTH_URL`          | -       |
-| `--openstack-flavor-name`        | -                      | -       |
-| `--openstack-flavor-id`          | -                      | -       |
-| `--openstack-image-name`         | -                      | -       |
-| `--openstack-image-id`           | -                      | -       |
-| `--openstack-insecure`           | -                      | -       |
-| `--openstack-domain-name`        | `OS_DOMAIN_NAME`       | -       |
-| `--openstack-domain-id`          | `OS_DOMAIN_ID`         | -       |
-| `--openstack-username`           | `OS_USERNAME`          | -       |
-| `--openstack-password`           | `OS_PASSWORD`          | -       |
-| `--openstack-tenant-name`        | `OS_TENANT_NAME`       | -       |
-| `--openstack-tenant-id`          | `OS_TENANT_ID`         | -       |
-| `--openstack-region`             | `OS_REGION_NAME`       | -       |
-| `--openstack-availability-zone`  | `OS_AVAILABILITY_ZONE` | -       |
-| `--openstack-endpoint-type`      | `OS_ENDPOINT_TYPE`     | -       |
-| `--openstack-net-name`           | -                      | -       |
-| `--openstack-net-id`             | -                      | -       |
-| `--openstack-sec-groups`         | -                      | -       |
-| `--openstack-floatingip-pool`    | -                      | -       |
-| `--openstack-ssh-user`           | -                      | `root`  |
-| `--openstack-ssh-port`           | -                      | `22`    |
+| CLI option                          | Environment variable   | Default |
+|-------------------------------------|------------------------|---------|
+| `--openstack-auth-url`              | `OS_AUTH_URL`          | -       |
+| `--openstack-flavor-name`           | -                      | -       |
+| `--openstack-flavor-id`             | -                      | -       |
+| `--openstack-image-name`            | -                      | -       |
+| `--openstack-image-id`              | -                      | -       |
+| `--openstack-insecure`              | -                      | -       |
+| `--openstack-domain-name`           | `OS_DOMAIN_NAME`       | -       |
+| `--openstack-domain-id`             | `OS_DOMAIN_ID`         | -       |
+| `--openstack-username`              | `OS_USERNAME`          | -       |
+| `--openstack-password`              | `OS_PASSWORD`          | -       |
+| `--openstack-tenant-name`           | `OS_TENANT_NAME`       | -       |
+| `--openstack-tenant-id`             | `OS_TENANT_ID`         | -       |
+| `--openstack-region`                | `OS_REGION_NAME`       | -       |
+| `--openstack-availability-zone`     | `OS_AVAILABILITY_ZONE` | -       |
+| `--openstack-endpoint-type`         | `OS_ENDPOINT_TYPE`     | -       |
+| `--openstack-net-name`              | -                      | -       |
+| `--openstack-net-id`                | -                      | -       |
+| `--openstack-sec-groups`            | -                      | -       |
+| `--openstack-floatingip-pool`       | -                      | -       |
+| `--openstack-floatingip-always-new` | -                      | `false` |
+| `--openstack-ssh-user`              | -                      | `root`  |
+| `--openstack-ssh-port`              | -                      | `22`    |
 
 #### Rackspace
 Create machines on [Rackspace cloud](http://www.rackspace.com/cloud)
@@ -1466,7 +1469,7 @@ Create machines locally using [VirtualBox](https://www.virtualbox.org/).
 This driver requires VirtualBox to be installed on your host.
 
     $ docker-machine create --driver=virtualbox vbox-test
-    
+
 You can create an entirely new machine or you can convert a Boot2Docker VM into
 a machine by importing the VM. To convert a Boot2Docker VM, you'd use the following
 command:
@@ -1502,11 +1505,11 @@ using the `http://` form.
 
 To customize the host only adapter, you can use the `--virtualbox-hostonly-cidr`
 flag.  This will specify the host IP and Machine will calculate the VirtualBox
-DHCP server address (a random IP on the subnet between `.1` and `.25`) so 
+DHCP server address (a random IP on the subnet between `.1` and `.25`) so
 it does not clash with the specified host IP.
 Machine will also specify the DHCP lower bound to `.100` and the upper bound
 to `.254`.  For example, a specified CIDR of `192.168.24.1/24` would have a
-DHCP server between `192.168.24.2-25`, a lower bound of `192.168.24.100` and 
+DHCP server between `192.168.24.2-25`, a lower bound of `192.168.24.100` and
 upper bound of `192.168.24.254`.
 
 Environment variables and default values:
@@ -1530,7 +1533,7 @@ Options:
  - `--vmwarefusion-disk-size`: Size of disk for host VM (in MB).
  - `--vmwarefusion-memory-size`: Size of memory for host VM (in MB).
 
-The VMware Fusion driver uses the latest boot2docker image. 
+The VMware Fusion driver uses the latest boot2docker image.
 See [frapposelli/boot2docker](https://github.com/frapposelli/boot2docker/tree/vmware-64bit)
 
 Environment variables and default values:

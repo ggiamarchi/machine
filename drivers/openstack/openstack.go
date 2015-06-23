@@ -41,6 +41,7 @@ type Driver struct {
 	FloatingIpPoolId    string
 	FloatingIpId        string
 	FloatingIpAllocated bool
+	FloatingIpAlwaysNew bool
 	SSHUser             string
 	SSHPort             int
 	IPAddress           string
@@ -166,6 +167,10 @@ func GetCreateFlags() []cli.Flag {
 			Usage: "OpenStack floating IP pool to get an IP from to assign to the instance",
 			Value: "",
 		},
+		cli.BoolFlag{
+			Name:  "openstack-floatingip-always-new",
+			Usage: "Force to allocate a new floating IP even if a free IP is available",
+		},
 		cli.StringFlag{
 			Name:  "openstack-ssh-user",
 			Usage: "OpenStack SSH user",
@@ -262,6 +267,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		d.SecurityGroups = strings.Split(flags.String("openstack-sec-groups"), ",")
 	}
 	d.FloatingIpPool = flags.String("openstack-floatingip-pool")
+	d.FloatingIpAlwaysNew = flags.Bool("openstack-floatingip-always-new")
 	d.SSHUser = flags.String("openstack-ssh-user")
 	d.SSHPort = flags.Int("openstack-ssh-port")
 	d.SwarmMaster = flags.Bool("swarm-master")
@@ -647,32 +653,37 @@ func (d *Driver) assignFloatingIp() error {
 		return err
 	}
 
-	ips, err := d.client.GetFloatingIPs(d)
-	if err != nil {
-		return err
-	}
-
 	var floatingIp *FloatingIp
 
-	log.WithFields(log.Fields{
-		"MachineId": d.MachineId,
-		"Pool":      d.FloatingIpPool,
-	}).Debugf("Looking for an available floating IP")
+	if !d.FloatingIpAlwaysNew {
+		ips, err := d.client.GetFloatingIPs(d)
+		if err != nil {
+			return err
+		}
 
-	for _, ip := range ips {
-		if ip.PortId == "" {
-			log.WithFields(log.Fields{
-				"MachineId": d.MachineId,
-				"IP":        ip.Ip,
-			}).Debugf("Available floating IP found")
-			floatingIp = &ip
-			break
+		log.WithFields(log.Fields{
+			"MachineId": d.MachineId,
+			"Pool":      d.FloatingIpPool,
+		}).Debugf("Looking for an available floating IP")
+
+		for _, ip := range ips {
+			if ip.PortId == "" {
+				log.WithFields(log.Fields{
+					"MachineId": d.MachineId,
+					"IP":        ip.Ip,
+				}).Debugf("Available floating IP found")
+				floatingIp = &ip
+				break
+			}
 		}
 	}
 
 	if floatingIp == nil {
 		floatingIp = &FloatingIp{}
-		log.WithField("MachineId", d.MachineId).Debugf("No available floating IP found. Allocating a new one...")
+		if !d.FloatingIpAlwaysNew {
+			log.WithField("MachineId", d.MachineId).Debugf("No available floating IP found.")
+		}
+		log.WithField("MachineId", d.MachineId).Debugf("Allocating a new floating IP...")
 	} else {
 		log.WithField("MachineId", d.MachineId).Debugf("Assigning floating IP to the instance")
 	}
