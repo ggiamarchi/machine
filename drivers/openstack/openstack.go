@@ -16,39 +16,41 @@ import (
 )
 
 type Driver struct {
-	AuthUrl          string
-	Insecure         bool
-	DomainID         string
-	DomainName       string
-	Username         string
-	Password         string
-	TenantName       string
-	TenantId         string
-	Region           string
-	AvailabilityZone string
-	EndpointType     string
-	MachineName      string
-	MachineId        string
-	FlavorName       string
-	FlavorId         string
-	ImageName        string
-	ImageId          string
-	KeyPairName      string
-	NetworkName      string
-	NetworkId        string
-	SecurityGroups   []string
-	FloatingIpPool   string
-	FloatingIpPoolId string
-	SSHUser          string
-	SSHPort          int
-	IPAddress        string
-	CaCertPath       string
-	PrivateKeyPath   string
-	storePath        string
-	SwarmMaster      bool
-	SwarmHost        string
-	SwarmDiscovery   string
-	client           Client
+	AuthUrl             string
+	Insecure            bool
+	DomainID            string
+	DomainName          string
+	Username            string
+	Password            string
+	TenantName          string
+	TenantId            string
+	Region              string
+	AvailabilityZone    string
+	EndpointType        string
+	MachineName         string
+	MachineId           string
+	FlavorName          string
+	FlavorId            string
+	ImageName           string
+	ImageId             string
+	KeyPairName         string
+	NetworkName         string
+	NetworkId           string
+	SecurityGroups      []string
+	FloatingIpPool      string
+	FloatingIpPoolId    string
+	FloatingIpId        string
+	FloatingIpAllocated bool
+	SSHUser             string
+	SSHPort             int
+	IPAddress           string
+	CaCertPath          string
+	PrivateKeyPath      string
+	storePath           string
+	SwarmMaster         bool
+	SwarmHost           string
+	SwarmDiscovery      string
+	client              Client
 }
 
 func init() {
@@ -403,6 +405,18 @@ func (d *Driver) Remove() error {
 	log.Info("Deleting OpenStack instance...")
 	if err := d.initCompute(); err != nil {
 		return err
+	}
+	if err := d.initNetwork(); err != nil {
+		return err
+	}
+	if d.FloatingIpAllocated {
+		log.WithFields(log.Fields{
+			"MachineId": d.MachineId,
+			"Id":        d.FloatingIpId,
+		}).Debug("deleting floating IP...")
+		if err := d.client.DeleteFloatingIp(d); err != nil {
+			return err
+		}
 	}
 	if err := d.client.DeleteInstance(d); err != nil {
 		return err

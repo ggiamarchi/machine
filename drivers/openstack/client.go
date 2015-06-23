@@ -33,6 +33,7 @@ type Client interface {
 	StopInstance(d *Driver) error
 	RestartInstance(d *Driver) error
 	DeleteInstance(d *Driver) error
+	DeleteFloatingIp(d *Driver) error
 	WaitForInstanceStatus(d *Driver, status string) error
 	GetInstanceIpAddresses(d *Driver) ([]IpAddress, error)
 	CreateKeyPair(d *Driver, name string, publicKey string) error
@@ -130,6 +131,13 @@ func (c *GenericClient) RestartInstance(d *Driver) error {
 
 func (c *GenericClient) DeleteInstance(d *Driver) error {
 	if result := servers.Delete(c.Compute, d.MachineId); result.Err != nil {
+		return result.Err
+	}
+	return nil
+}
+
+func (c *GenericClient) DeleteFloatingIp(d *Driver) error {
+	if result := floatingips.Delete(c.Network, d.FloatingIpId); result.Err != nil {
 		return result.Err
 	}
 	return nil
@@ -300,8 +308,11 @@ func (c *GenericClient) AssignFloatingIP(d *Driver, floatingIp *FloatingIp, port
 		floatingIp.Ip = f.FloatingIP
 		floatingIp.NetworkId = f.FloatingNetworkID
 		floatingIp.PortId = f.PortID
+		d.FloatingIpAllocated = true
+		d.FloatingIpId = floatingIp.Id
 		return nil
 	}
+	d.FloatingIpId = floatingIp.Id
 	_, err := floatingips.Update(c.Network, floatingIp.Id, floatingips.UpdateOpts{
 		PortID: portId,
 	}).Extract()
